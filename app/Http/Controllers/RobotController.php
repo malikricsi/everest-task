@@ -67,6 +67,34 @@ class RobotController extends Controller
         return redirect()->route('robot-index');
     }
 
+    public function combat(Request $request)
+    {
+        $data = $this->validateData($request, RobotEnum::OPERATION_TYPE_COMBAT);
+
+        return view('robot.combat', [
+            'winner' => $this->doCombat($data)
+        ]);
+    }
+
+    private function doCombat(array $data): ?Robot
+    {
+        $manager = $this->manager;
+        $firstRobot = $manager->findById($data['id'][0]);
+        $secondRobot = $manager->findById($data['id'][1]);
+        switch ($firstRobot->power <=> $secondRobot->power) {
+            case 1:
+                return $firstRobot;
+            case 0:
+                return ($firstRobot->created_at > $secondRobot->created_at)
+                    ? $firstRobot
+                    : $secondRobot;
+            case -1:
+                return $secondRobot;
+        }
+
+        return null;
+    }
+
     private function getIndexView()
     {
         return view('robot.index', [
@@ -98,6 +126,8 @@ class RobotController extends Controller
                 return $dataRules;
             case EntityEnum::OPERATION_TYPE_UPDATE:
                 return array_merge($this->getIdRules(), $dataRules);
+            case RobotEnum::OPERATION_TYPE_COMBAT:
+                return $this->getCombatRules();
         }
 
         return [];
@@ -118,5 +148,13 @@ class RobotController extends Controller
     private function getIdRules(): array
     {
         return ['id' => 'required|integer|exists:robots,id'];
+    }
+
+    private function getCombatRules(): array
+    {
+        return [
+            'id.0' => 'required|integer|exists:robots,id',
+            'id.1' => 'required|integer|exists:robots,id|different:id.0'
+        ];
     }
 }

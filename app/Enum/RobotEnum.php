@@ -13,4 +13,6 @@ class RobotEnum
         self::TYPE_ROUGE,
         self::TYPE_ASSAULT,
     ];
+
+    public const OPERATION_TYPE_COMBAT = 'combat';
 }

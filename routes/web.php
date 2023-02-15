@@ -22,3 +22,5 @@ Route::get('/edit/{id}', [RobotController::class, 'edit'])->name('robot-edit');
 Route::post('/update', [RobotController::class, 'update'])->name('robot-update');
 Route::get('/delete/{id}', [RobotController::class, 'delete'])->name('robot-delete');
 
+Route::post('/combat', [RobotController::class, 'combat'])->name('robot-combat');
+
