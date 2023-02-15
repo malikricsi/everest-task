@@ -11,8 +11,8 @@
             integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     </head>
     <body>
-        <header id="header" class="container">
-            <a href="{{ route('robot-index') }}">Robotok</a>
+        <header id="header" class="container pt-1 mb-5">
+            <a class="btn btn-primary" href="{{ route('robot-index') }}">Robotok</a>
         </header>
         <article id="main-content" class="content">
             <div class="container">

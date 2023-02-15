@@ -34,7 +34,7 @@ class RobotController extends Controller
         $data = $this->validateData($request, EntityEnum::OPERATION_TYPE_STORE);
         $this->manager->saveEntity($data);
 
-        return redirect()->route('robot-index');
+        return redirect()->route('robot-index')->with('message', 'Sikeres mentés.');
     }
 
     public function edit(int $id)
@@ -45,7 +45,7 @@ class RobotController extends Controller
             );
         }
 
-        return redirect()->route('robot-index');
+        return redirect()->route('robot-index')->withErrors(['id' => 'Invalid entity ID.']);
     }
 
     public function update(Request $request)
@@ -54,7 +54,7 @@ class RobotController extends Controller
         $manager = $this->manager;
         $manager->updateEntity($manager->findById($data['id']), $data);
 
-        return redirect()->route('robot-index');
+        return redirect()->route('robot-index')->with('message', 'Sikeres módosítás.');
     }
 
     public function delete(int $id)
@@ -64,7 +64,7 @@ class RobotController extends Controller
             $manager->deleteEntity($manager->findById($id));
         }
 
-        return redirect()->route('robot-index');
+        return redirect()->route('robot-index')->with('message', 'Sikeres törlés.');
     }
 
     public function combat(Request $request)
@@ -153,6 +153,7 @@ class RobotController extends Controller
     private function getCombatRules(): array
     {
         return [
+            'id' => 'required|array|size:2',
             'id.0' => 'required|integer|exists:robots,id',
             'id.1' => 'required|integer|exists:robots,id|different:id.0'
         ];

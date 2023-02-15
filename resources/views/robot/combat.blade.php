@@ -19,5 +19,5 @@
             </div>
         </div>
     </div>
-    <a href="{{ route('robot-index') }}">Vissza a robotokhoz</a>
+    <a class="btn btn-primary" href="{{ route('robot-index') }}">Vissza a robotokhoz</a>
 @endsection
