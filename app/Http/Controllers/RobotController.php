@@ -7,6 +7,7 @@ use App\Enum\RobotEnum;
 use App\Manager\RobotManager;
 use App\Models\Robot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class RobotController extends Controller
@@ -38,9 +39,13 @@ class RobotController extends Controller
 
     public function edit(int $id)
     {
-        return $this->getEditView(
-            $this->manager->findById($id)
-        );
+        if (true === $this->validateId($id)) {
+            return $this->getEditView(
+                $this->manager->findById($id)
+            );
+        }
+
+        return redirect()->route('robot-index');
     }
 
     public function update(Request $request)
@@ -52,11 +57,12 @@ class RobotController extends Controller
         return redirect()->route('robot-index');
     }
 
-    public function delete(Request $request)
+    public function delete(int $id)
     {
-        $data = $this->validateData($request, EntityEnum::OPERATION_TYPE_DELETE);
-        $manager = $this->manager;
-        $manager->deleteEntity($manager->findById($data['id']));
+        if (true === $this->validateId($id)) {
+            $manager = $this->manager;
+            $manager->deleteEntity($manager->findById($id));
+        }
 
         return redirect()->route('robot-index');
     }
@@ -78,9 +84,28 @@ class RobotController extends Controller
         return $request->validate($this->getValidationRules($operationType));
     }
 
+    private function validateId(int $id): bool
+    {
+        $validator = Validator::make(compact('id'), $this->getIdRules());
+        return !$validator->fails();
+    }
+
     private function getValidationRules(string $operationType): array
     {
-        $dataRules = [
+        $dataRules = $this->getDataRules();
+        switch ($operationType) {
+            case EntityEnum::OPERATION_TYPE_STORE:
+                return $dataRules;
+            case EntityEnum::OPERATION_TYPE_UPDATE:
+                return array_merge($this->getIdRules(), $dataRules);
+        }
+
+        return [];
+    }
+
+    private function getDataRules(): array
+    {
+        return [
             'name' => 'required|string|min:1|max:255',
             'type' => [
                 'required',
@@ -88,17 +113,10 @@ class RobotController extends Controller
             ],
             'power' => 'required|integer|min:1|max:255',
         ];
-        $idRules = ['id' => 'required|exists:robots,id'];
+    }
 
-        switch ($operationType) {
-            case EntityEnum::OPERATION_TYPE_STORE:
-                return $dataRules;
-            case EntityEnum::OPERATION_TYPE_UPDATE:
-                return array_merge($idRules, $dataRules);
-            case EntityEnum::OPERATION_TYPE_DELETE:
-                return $idRules;
-        }
-
-        return [];
+    private function getIdRules(): array
+    {
+        return ['id' => 'required|integer|exists:robots,id'];
     }
 }

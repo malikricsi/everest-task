@@ -21,11 +21,7 @@
                     <td>{{ $entity->power }}</td>
                     <td>
                         <a href="{{ route('robot-edit', ['id' => $entity->id]) }}">Szerkesztés</a>
-                        <form method="POST" action="{{ route('robot-delete') }}">
-                            @csrf
-                            <input type="hidden" name="id" value="{{ $entity->id }}" />
-                            <input type="submit" value="Törlés" />
-                        </form>
+                        <a href="{{ route('robot-delete', ['id' => $entity->id]) }}">Törlés</a>
                     </td>
                 </tr>
             @endforeach

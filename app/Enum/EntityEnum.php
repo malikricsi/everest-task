@@ -14,5 +14,4 @@ class EntityEnum
 
     public const OPERATION_TYPE_STORE = 'store';
     public const OPERATION_TYPE_UPDATE = 'update';
-    public const OPERATION_TYPE_DELETE = 'delete';
 }
