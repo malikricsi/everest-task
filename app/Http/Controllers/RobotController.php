@@ -9,6 +9,7 @@ use App\Models\Robot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class RobotController extends Controller
 {
@@ -39,10 +40,8 @@ class RobotController extends Controller
 
     public function edit(int $id)
     {
-        if (true === $this->validateId($id)) {
-            return $this->getEditView(
-                $this->manager->findById($id)
-            );
+        if (true === $this->validateId($id) && null !== $robot = $this->manager->findById($id)) {
+            return $this->getEditView($robot);
         }
 
         return redirect()->route('robot-index')->withErrors(['id' => 'Invalid entity ID.']);
@@ -59,28 +58,45 @@ class RobotController extends Controller
 
     public function delete(int $id)
     {
-        if (true === $this->validateId($id)) {
-            $manager = $this->manager;
-            $manager->deleteEntity($manager->findById($id));
+        $manager = $this->manager;
+        $response = redirect()->route('robot-index');
+        if (true === $this->validateId($id) && null !== $robot = $manager->findById($id)) {
+            $manager->deleteEntity($robot);
+            return $response->with('message', 'Sikeres törlés.');
         }
 
-        return redirect()->route('robot-index')->with('message', 'Sikeres törlés.');
+        return $response->withErrors(['id' => 'Invalid entity ID.']);
     }
 
     public function combat(Request $request)
     {
         $data = $this->validateData($request, RobotEnum::OPERATION_TYPE_COMBAT);
+        $manager = $this->manager;
+
+        try {
+            $firstRobot = $manager->findByIdAndValidate($data['id'][0], 0);
+            $secondRobot = $manager->findByIdAndValidate($data['id'][1], 1);
+        } catch (ValidationException $exception) {
+            return redirect()->route('robot-index')->withErrors(['id' => 'Invalid entity ID.']);
+        }
 
         return view('robot.combat', [
-            'winner' => $this->doCombat($data)
+            'winner' => $this->doCombat($firstRobot, $secondRobot)
         ]);
     }
 
-    private function doCombat(array $data): ?Robot
+    public function apiCombat(Request $request)
     {
+        $data = $this->validateData($request, RobotEnum::OPERATION_TYPE_COMBAT);
         $manager = $this->manager;
-        $firstRobot = $manager->findById($data['id'][0]);
-        $secondRobot = $manager->findById($data['id'][1]);
+        $firstRobot = $manager->findByIdAndValidate($data['id'][0], 0);
+        $secondRobot = $manager->findByIdAndValidate($data['id'][1], 1);
+
+        return json_encode($this->doCombat($firstRobot, $secondRobot));
+    }
+
+    private function doCombat(Robot $firstRobot, Robot $secondRobot): Robot
+    {
         switch ($firstRobot->power <=> $secondRobot->power) {
             case 1:
                 return $firstRobot;
@@ -88,11 +104,9 @@ class RobotController extends Controller
                 return ($firstRobot->created_at > $secondRobot->created_at)
                     ? $firstRobot
                     : $secondRobot;
-            case -1:
+            default:
                 return $secondRobot;
         }
-
-        return null;
     }
 
     private function getIndexView()
@@ -141,21 +155,23 @@ class RobotController extends Controller
                 'required',
                 Rule::in(RobotEnum::TYPES)
             ],
-            'power' => 'required|integer|min:1|max:255',
+            'power' => 'required|integer|min:1|max:2147483647',
         ];
     }
 
     private function getIdRules(): array
     {
-        return ['id' => 'required|integer|exists:robots,id'];
+        return [
+            'id' => 'required|integer'
+        ];
     }
 
     private function getCombatRules(): array
     {
         return [
             'id' => 'required|array|size:2',
-            'id.0' => 'required|integer|exists:robots,id',
-            'id.1' => 'required|integer|exists:robots,id|different:id.0'
+            'id.0' => 'required|integer',
+            'id.1' => 'required|integer|different:id.0'
         ];
     }
 }

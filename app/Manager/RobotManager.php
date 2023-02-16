@@ -4,21 +4,27 @@ namespace App\Manager;
 
 use App\Enum\EntityEnum;
 use App\Models\Robot;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Validation\ValidationException;
 
 class RobotManager
 {
-    public function findActiveEntities()
+    public function findActiveEntities(): Collection
     {
-        return Robot::where('state', 'active')->get();
+        return Robot::where('state', EntityEnum::STATE_ACTIVE)->get();
     }
 
-    public function findById(int $id)
+    public function findById(int $id): ?Robot
     {
-        $robot = Robot::find($id);
+        return Robot::where('id', $id)
+            ->where('state', '!=', EntityEnum::STATE_DELETED)
+            ->first();
+    }
 
-        if (null === $robot || EntityEnum::STATE_DELETED === $robot->state) {
-            return redirect()->route('robot-index')->withErrors(['id' => 'Invalid entity ID.']);
+    public function findByIdAndValidate(int $id, int $sequence): Robot
+    {
+        if (null === $robot = $this->findById($id)) {
+            throw ValidationException::withMessages(["id.$sequence" => 'Invalid entity ID.']);
         }
 
         return $robot;

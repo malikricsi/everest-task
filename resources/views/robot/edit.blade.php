@@ -32,7 +32,7 @@
         </div>
         <div class="mb-4">
             <label for="power" class="form-label">Robot ereje</label>
-            <input type="number" class="form-control" id="power" name="power" min="1" max="255" step="1"  value="{{ old('power') ?? $robot->power ?? '' }}">
+            <input type="number" class="form-control" id="power" name="power" min="1" max="2147483647" step="1"  value="{{ old('power') ?? $robot->power ?? '' }}">
             @error('power')
                 <div class="mt-1 alert alert-danger">{{ $message }}</div>
             @enderror
